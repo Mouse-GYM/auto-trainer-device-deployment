@@ -1,0 +1,21 @@
+# Services that will be run regardless of environment and will not be built locally as part of development.
+services:
+  api:
+    image: ghcr.io/mouse-gym/auto-trainer-device-be:1.0.1
+    hostname: auto-trainer-device-be
+    environment:
+      Autotrainer__DeviceId: "${AUTOTRAINER_DEVICE_ID}"
+      Autotrainer__SnsTopicArn: "${AUTOTRAINER_SNS_TOPIC_ARN}"
+      Autotrainer__SnsKeyId: "${AUTOTRAINER_SNS_KEY_ID}"
+      Autotrainer__SnsSecretKey: "${AUTOTRAINER_SNS_KEY}"
+    volumes:
+      - "${AUTOTRAINER_LOG_VOLUME}:/var/log/auto-trainer"
+    network_mode: host
+    restart: always
+  client:
+    image: ghcr.io/mouse-gym/auto-trainer-device-fe:1.0.1
+    hostname: auto-trainer-device-fe
+    volumes:
+      - "${AUTOTRAINER_LOG_VOLUME}:/var/log/auto-trainer"
+    network_mode: host
+    restart: always

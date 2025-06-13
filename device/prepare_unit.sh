@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <device_name>" >&2
+  exit 1
+fi
+
+device_name="$1"
+
+echo "Setting hostname to $device_name"
+
+sudo hostnamectl set-hostname $device_name
+
+cd "$(dirname "${0}")"
+
+desired_packages=(/ide
+  libhdf5-serial-dev
+  libxcb-cursor0
+  busybox
+  can-utils
+  git git-lfs
+)
+
+sudo apt-get install -y "${desired_packages[@]}"
+
+# Disable gnome tracker service:
+echo -e "\nHidden=true\n" | sudo tee --append /etc/xdg/autostart/tracker-extract.desktop /etc/xdg/autostart/tracker-miner-apps.desktop /etc/xdg/autostart/tracker-miner-fs.desktop /etc/xdg/autostart/tracker-miner-user-guides.desktop /etc/xdg/autostart/tracker-store.desktop > /dev/null
+
+# Interval in days to check whether the filesystem is up to date in the database. 0 forces crawling anytime, -1 forces it only after unclean shutdowns, and -2 disables it entirely
+gsettings set org.freedesktop.Tracker.Miner.Files crawling-interval -2  # Default: -1
+# Set to false to completely disable any file monitoring
+gsettings set org.freedesktop.Tracker.Miner.Files enable-monitors false # Default: true
+
+# cleanup eventual already created db:
+tracker reset --hard  # you'll have to confirm Y
+
+# End disable gnome tracker service.
+
+echo "Copying target files ..."
+
+(
+  cd ./system-install
+  sudo rsync -av ./ /
+)
+
+# Enable on boot/startup.
+sudo systemctl enable can_setup.service
+
+# Enable for this boot cycle.
+sudo systemctl start can_setup.service
+
+# Reload mDNS with new service.
+sudo service avahi-daemon restart
+
+# Output for docker container logs
+sudo mkdir -p /autotrainer/logs
+
+sudo chmod uog+w /autotrainer/logs
+
+echo "Preparation complete."

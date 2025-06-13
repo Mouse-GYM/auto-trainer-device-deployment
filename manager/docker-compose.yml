@@ -1,0 +1,13 @@
+# Services that will be run regardless of environment and will not be built locally as part of development.
+services:
+  client:
+    image: ghcr.io/mouse-gym/management-dashboard:1.0.1
+    hostname: management-dashboard
+    ports:
+      - "8500:80"
+    networks:
+      - autotrainer
+    restart: always
+
+networks:
+  autotrainer:
