@@ -1,6 +1,0 @@
-{
-  "name": "@mouse-gym/management-registry-deploy",
-  "dependencies": {
-    "@mouse-gym/management-registry": "1.0.4"
-  }
-}
