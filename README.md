@@ -2,22 +2,24 @@
 Installation of the core AutoTrainer application is described in the [AutoTrainer Repository itself](https://github.com/Mouse-GYM/auto-trainer).
 In addition, the following supporting services are required for the node to participate in centralized system management.
 
-The majority of device setup is performed by the `prepare_unit.sh` script.  This is followed by a manual, device-specific
+The majority of device setup is performed by the `prepare_autotrainer_unit.sh` script. This is followed by a manual, device-specific
 configuration step.
 
 ### Typical Installation
 
 #### 1. Automated Preparation
-Run `prepare_unit.sh` with the name of the unit as an argument.  The name will be used as the hostname for the computer
-as well as the identifier in remote views, emergency notifications, and similar.  It should be unique for all units in
-the system.
+Run `prepare_autotrainer_unit.sh` with the name of the unit as an argument.
+The name will be used as the hostname for the computer as well as the identifier in remote views,
+emergency notifications, and similar.
+It should be unique for all units in the system.
 
 ```bash
-./prepare_unit.sh agx505
+./prepare_autotrainer_unit.sh <DEVICE_HOST_NAME>
 ```
 
-where `agx505` should be replaced with the device-specific name.  The script requires the use of `sudo`.  You will be 
-prompted to enter the account password if you have already authenticated for an earlier `sudo` command.
+where `<DEVICE_HOST_NAME>` must be replaced with the device-specific name. Such as _agx327_.
+The script requires the use of `sudo`.
+You will be prompted to enter the account password if you have already authenticated for an earlier `sudo` command.
 
 #### 2. Configure Docker Compose Variables
 
@@ -27,9 +29,11 @@ Copy the environment template:
 cp .env-template .env
 ```
 
-Edit the newly created .env and populate the required values.  Typical values are provided in the comments of the template
-file.  The device name should be the same value you used as an argument to `prepare_unit.sh`  Values for the AWS SNS
-notifications are found elsewhere.
+Edit the newly created .env and populate the required values.
+Typical values are provided in the comments of the template file.
+The device name should be the same value you used as an argument to `prepare_autotrainer_unit.sh`.
+
+Values for the AWS SNS notifications are found elsewhere.
 
 #### 3. Authenticate for Docker Images
 Installing the per-device management console services requires access to the Mouse-GYM GitHub organization.
@@ -53,12 +57,13 @@ Note: For Colorado devices at the time of this writing, a username and access to
 After the first manual start, the services will restart after any reboot or other reason for exit automatically.
 
 ### Details of Automated Preparation
-The following provides details of some of the actions performed in the `prepare_unit.sh` script.  These should not need
-to be done manually, but may be useful if some portion of the configuration needs to be updated, or the script requires
-troubleshooting.
+The following provides details of some of the actions performed in the `prepare_autotrainer_unit.sh` script.
+These should not need to be done manually, but may be useful if some portion of the configuration needs to be updated,
+or the script requires troubleshooting.
 
 #### Set the Hostname
-The hostname of the device should be set to a unique name.  This can be done via Settings->About->Device Name on the device, or via the command line with:
+The hostname of the device should be set to a unique name.
+This can be done via Settings->About->Device Name on the device, or via the command line with:
 
 ```bash
 sudo hostnamectl set-hostname <unique-name>
@@ -74,7 +79,7 @@ It this repository has been cloned to the device, the file can be copied directl
 
 ```bash
 sudo mkdir -p /etc/avahi/services
-sudo cp  auto-trainer-deployment/device/autotrainer.service /etc/avahi/services/
+sudo cp auto-trainer-deployment/device/autotrainer.service /etc/avahi/services/
 ```
 
 Alternatively, manually add and edit the file `/etc/avahi/services/autotrainer.service` with the following contents:
