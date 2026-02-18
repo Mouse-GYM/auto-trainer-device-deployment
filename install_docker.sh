@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+sudo apt-get remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 
 # Add Docker's official GPG key:
-sudo apt update
-sudo apt install ca-certificates curl
+sudo apt-get update
+sudo apt-get install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -18,6 +18,13 @@ Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
-sudo apt update
+sudo apt-get update
 
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# it's supposed to be available in base nvidia ubuntu install :
+sudo apt-get install -y nvidia-container-toolkit
+
+sudo systemctl restart docker
+
+echo "You can now use docker with gpu, using '--runtime nvidia --gpus all' args to docker run command, for instance"
