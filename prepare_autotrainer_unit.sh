@@ -25,7 +25,7 @@ sudo hostnamectl set-hostname "${device_name}"
 echo "Copying target files ..."
 (
   cd ./system-install
-  sudo rsync -av ./ /
+  sudo rsync -av --chown root:root ./ /
 )
 
 #
