@@ -1,0 +1,8 @@
+[Unit]
+Description=Autotrainer nightly maintenance
+
+[Service]
+Type=oneshot
+ExecStart=bash -x /usr/local/sbin/auto_trainer_nightly_maintenance.sh
+User=autotrainer
+# ensure the correct user is used, otherwise we would have to pass the correct ~/Documents/RawDataLocal dir

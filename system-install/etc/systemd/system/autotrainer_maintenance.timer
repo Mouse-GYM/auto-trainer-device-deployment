@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for autotrainer_maintenance.service
+Requires=autotrainer_maintenance.service
+
+[Timer]
+Unit=autotrainer_maintenance.service
+# Run the timer, every day, at 1:00 AM
+OnCalendar=*-*-* 01:00:00
+
+[Install]
+WantedBy=timers.target
