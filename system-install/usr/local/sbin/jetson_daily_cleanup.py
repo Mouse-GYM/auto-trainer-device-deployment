@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+
 import argparse
 import os
+import subprocess
+
 import cv2
 import glob
 import shutil
@@ -22,7 +25,8 @@ def create_movie_from_images(image_folder, output_video_path, frame_rate):
     # Get list of PNG files and sort by filename
     image_files = sorted(glob.glob(os.path.join(image_folder, "*.png")))
     if not image_files:
-        raise ValueError("No PNG files found in the specified folder.")
+        print("No PNG files found in the specified folder.")
+        return 0
 
     # Get the dimensions of the first image for video properties
     for image_file in image_files:
@@ -30,10 +34,11 @@ def create_movie_from_images(image_folder, output_video_path, frame_rate):
         if sample_image is not None:
             height, width, _ = sample_image.shape
             break
-        elif image_file == image_files[-1]:
-            print(f"No valid images from {image_folder}")
-            return curr_frm
-            
+        # elif image_file == image_files[-1]:
+    else:
+        print(f"No valid images from {image_folder}")
+        return curr_frm
+
     # Define the codec and initialize VideoWriter
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # For .mp4 files
     video_writer = cv2.VideoWriter(output_video_path, fourcc, frame_rate, (width, height))
@@ -52,9 +57,8 @@ def create_movie_from_images(image_folder, output_video_path, frame_rate):
         formatted_timestamp = f"{timestamp[:2]}:{timestamp[2:4]}:{timestamp[4:]}"  # Convert to hh:mm:ss
         millis = filename.split('_')[-1]  # Extract hhmmss part
         ts_list.append((curr_frm,f"{timestamp}_{millis[:-4]}"))
-        curr_frm+=1
+        curr_frm += 1
 
-        
         # Embed timestamp as text in the frame
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1.0
@@ -156,55 +160,10 @@ def find_web_image_directories(start_dir):
         for directory in dirs:
             if directory.endswith('_web_images'):
                 image_folder = os.path.join(root, directory)
-                image_files = sorted(glob.glob(os.path.join(image_folder, "*.png")))
-                if image_files:
+                has_image_files = any(glob.glob(os.path.join(image_folder, "*.png")))
+                if has_image_files:
                     web_image_dirs.append(image_folder)
-    
     return web_image_dirs
-
-
-def copy_directory_contents(src_dir, dst_dir):
-    """
-    Copy the entire contents of one directory into another, skipping files
-    or directories that exist in the destination and have the same size.
-
-    Parameters:
-        src_dir (str): Path to the source directory.
-        dst_dir (str): Path to the destination directory.
-    """
-    # Ensure the source directory exists
-    if not os.path.exists(src_dir):
-        raise ValueError(f"Source directory does not exist: {src_dir}")
-    
-    # Ensure the destination directory exists, or create it
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
-
-    # Copy the contents of the source directory to the destination directory
-    for item in os.listdir(src_dir):
-        src_item = os.path.join(src_dir, item)
-        dst_item = os.path.join(dst_dir, item)
-
-        if os.path.isdir(src_item):
-            # Recursively copy directories
-            if not os.path.exists(dst_item):
-                shutil.copytree(src_item, dst_item)
-            else:
-                copy_directory_contents(src_item, dst_item)  # Recurse for subdirectories
-        else:
-            # Skip files that already exist and have the same size
-            if os.path.exists(dst_item) and os.path.getsize(src_item) == os.path.getsize(dst_item):
-                continue
-            # Copy file
-            try:
-                shutil.copy2(src_item, dst_item)
-            except:
-                print('Copy2 failed, trying copy')
-                try:
-                    shutil.copy(src_item, dst_item)
-                except:
-                    print('Copy failed, trying copyfile')
-                    shutil.copyfile(src_item, dst_item)
 
 
 def main():
@@ -223,27 +182,25 @@ def main():
     for image_folder in web_image_dirs:
         output_video_name = os.path.basename(image_folder).replace('_images','_video')+'.mp4'
         output_video_path = os.path.join(image_folder, output_video_name)
-        
+
         frame_rate = 30
         frm_ct = create_movie_from_images(image_folder, output_video_path, frame_rate)
         if frm_ct > 0:
             validate_and_cleanup(image_folder, output_video_path, frm_ct)
-            
+
     dest_parent = args.target_dir
 
-    prev_date_list = [name for name in os.listdir(start_directory)]
-    for f in prev_date_list:
-        if f < '20241120':
-            continue
-        src_dir = os.path.join(start_directory,f)
-        dst_dir = os.path.join(dest_parent,f)
-        if not os.path.exists(dst_dir):
-            os.makedirs(dst_dir)
-        try:
-            copy_directory_contents(src_dir, dst_dir)
-        except:
-            print('First copy attempt threw an error')
-            copy_directory_contents(src_dir, dst_dir)
+    rsync_args = [
+        'rsync',
+        '-av',  # order matters
+        # target network does not allow to set anything but content:
+        '--no-owner', '--no-group', '--no-times', '--no-perms',
+        '--size-only',  # check on file size to decide (re)transfer/copy or not.
+        f"{start_directory}/",    # ensure the start dir ends with /
+        dest_parent.rstrip('/'),  # ensure the dest dir does NOT end with /
+                                  # see rsync man.
+    ]
+    subprocess.check_call(rsync_args)
 
 
 if __name__ == '__main__':
