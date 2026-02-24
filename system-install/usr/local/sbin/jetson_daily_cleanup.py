@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import datetime
 import os
 import subprocess
+from pathlib import Path
+from typing import List
 
 import cv2
 import glob
@@ -19,13 +22,13 @@ def create_movie_from_images(image_folder, output_video_path, frame_rate):
     - output_video_path: Path to save the output video file.
     - frame_rate: Frame rate for the output video.
     """
-    print(f"Reading images from {image_folder}")
+    # print(f"Reading images from {image_folder}")
     curr_frm = 0
     
     # Get list of PNG files and sort by filename
-    image_files = sorted(glob.glob(os.path.join(image_folder, "*.png")))
+    image_files = sorted(image_folder.glob("*.png"))
     if not image_files:
-        print("No PNG files found in the specified folder.")
+        # print("No PNG files found in the specified folder.")
         return 0
 
     # Get the dimensions of the first image for video properties
@@ -97,11 +100,11 @@ def validate_and_cleanup(image_folder, video_path, frm_ct):
     - None (Performs validation and file deletion).
     """
     # Count the number of PNG files in the folder
-    image_files = sorted(glob.glob(os.path.join(image_folder, "*.png")))
+    image_files = sorted(image_folder.glob("*.png"))
     
     if frm_ct == 0:
-        print("No PNG files found in the image folder.")
-        return
+        # print("No PNG files found in the image folder.")
+        return False
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
@@ -111,7 +114,7 @@ def validate_and_cleanup(image_folder, video_path, frm_ct):
             print(f"Error: Cannot open video file {video_path}. The file might be corrupt.")
         else:
             print(f"Error: {video_path} does not exist.")
-        return
+        return False
 
     # Get the total number of frames in the video
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -119,30 +122,32 @@ def validate_and_cleanup(image_folder, video_path, frm_ct):
     print(f"Number of PNG files: {frm_ct}")
 
     # Compare the number of frames to the number of PNG files
-    if num_frames == frm_ct:
-        print("Validation successful: The number of frames matches the number of PNG files.")
-        
-        # Optional: Confirm that the video is viewable by displaying the first frame
-        ret, frame = cap.read()
-        # Release the video capture object
-        cap.release()
-        if not ret:
-            print("Error: Unable to read frames from the video. The video might be corrupt.")
-            return
-        
-        # Delete PNG files
-        print("Deleting PNG files...")
-        for image_file in image_files:
-            try:
-                os.remove(image_file)
-            except Exception as e:
-                print(f"Error deleting {image_file}: {e}")
-        print("All PNG files deleted successfully.")
-    else:
+    if num_frames != frm_ct:
         print("Validation failed: The number of frames does NOT match the number of PNG files.")
-    
+        return False
 
-def find_web_image_directories(start_dir):
+    print("Validation successful: The number of frames matches the number of PNG files.")
+
+    # Optional: Confirm that the video is viewable by displaying the first frame
+    ret, frame = cap.read()
+    # Release the video capture object
+    cap.release()
+    if not ret:
+        print("Error: Unable to read frames from the video. The video might be corrupt.")
+        return False
+
+    # Delete PNG files
+    print("Deleting PNG files...")
+    for image_file in image_files:
+        try:
+            os.remove(image_file)
+        except Exception as e:
+            print(f"Error deleting {image_file}: {e}")
+    print("All PNG files deleted successfully.")
+    return True
+
+
+def find_web_image_directories(start_dir: Path, *, before_date: datetime.date) -> List[Path]:
     """
     Find all subdirectories under the given starting directory
     that end with '_web_images'.
@@ -157,50 +162,86 @@ def find_web_image_directories(start_dir):
     
     # Traverse the directory tree
     for root, dirs, files in os.walk(start_dir):
+        root = Path(root)
         for directory in dirs:
-            if directory.endswith('_web_images'):
-                image_folder = os.path.join(root, directory)
-                has_image_files = any(glob.glob(os.path.join(image_folder, "*.png")))
-                if has_image_files:
-                    web_image_dirs.append(image_folder)
+            date_front = directory[:8]
+            if not (date_front.isdigit() and directory.endswith('_web_images')):
+                # print(f"Skipping non-matching YYYYMMDD and _web_images dir: {directory}")
+                continue
+            date_images = datetime.datetime.strptime(date_front, '%Y%m%d').date()
+            if date_images >= before_date:
+                print(f"Skipping too recent data dir: {directory}")
+                continue
+            image_folder = root.joinpath(directory)
+            has_image_files = any(image_folder.glob("*.png"))
+            has_mp4_files = any(image_folder.glob("*.mp4"))
+            if has_image_files or has_mp4_files:
+                web_image_dirs.append(image_folder)
     return web_image_dirs
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    home_dir = os.getenv("HOME")
-    parser.add_argument("--raw-data-local-dir",
-                        default=os.path.join(home_dir, "Documents", "RawDataLocal"))
-    parser.add_argument("--target-dir",
-                        default='/mnt/isilon/Data/JetsonAutoTrainer/RawDataLocal')
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--raw-data-local-dir", help="RawDataLocal dir",
+                        type=Path,
+                        default=Path.home().joinpath("Documents", "RawDataLocal"))
+    parser.add_argument("--target-dir", help="Target dir, RawDataLocal as well",
+                        type=Path,
+                        default=Path('/mnt/isilon/Data/JetsonAutoTrainer/RawDataLocal'))
+    parser.add_argument("--stop-days-before-now", type=int, default=2,
+                        help="Do not process data more recent that n days before current date")
 
     args = parser.parse_args()
 
     start_directory = args.raw_data_local_dir
 
-    web_image_dirs = find_web_image_directories(start_directory)
+    max_up_to = datetime.date.today() - datetime.timedelta(days=args.stop_days_before_now)
+
+    web_image_dirs = find_web_image_directories(start_directory, before_date=max_up_to)
+
+    validated_dirs = []
     for image_folder in web_image_dirs:
-        output_video_name = os.path.basename(image_folder).replace('_images','_video')+'.mp4'
-        output_video_path = os.path.join(image_folder, output_video_name)
+        name = image_folder.name.replace("_images", "_video")
+        name += ".mp4"
+        output_video_path = image_folder.joinpath(name)
 
         frame_rate = 30
         frm_ct = create_movie_from_images(image_folder, output_video_path, frame_rate)
         if frm_ct > 0:
-            validate_and_cleanup(image_folder, output_video_path, frm_ct)
+            if validate_and_cleanup(image_folder, output_video_path, frm_ct):
+                validated_dirs.append(image_folder)
+        else:
+            has_mp4 = any(image_folder.glob("*.mp4"))
+            if has_mp4:
+                print(f"{image_folder} has no images but has mp4, including")
+                validated_dirs.append(image_folder)
 
-    dest_parent = args.target_dir
+    final_dirs = set()
 
-    rsync_args = [
-        'rsync',
-        '-av',  # order matters
-        # target network does not allow to set anything but content:
-        '--no-owner', '--no-group', '--no-times', '--no-perms',
-        '--size-only',  # check on file size to decide (re)transfer/copy or not.
-        f"{start_directory}/",    # ensure the start dir ends with /
-        dest_parent.rstrip('/'),  # ensure the dest dir does NOT end with /
-                                  # see rsync man.
-    ]
-    subprocess.check_call(rsync_args)
+    for validated_dir in validated_dirs:
+        rel_parent = validated_dir.relative_to(start_directory).parent
+        final_dirs.add(rel_parent)
+
+    final_dirs = sorted(final_dirs)
+
+    for rel_parent in final_dirs:
+        print(f"syncing {rel_parent}")
+        dest_parent = args.target_dir.joinpath(rel_parent)
+        dest_parent.mkdir(parents=True, exist_ok=True)
+        rsync_args = [
+            'rsync',
+            '-av',  # before the other --no
+            # target network does not allow to set anything but content:
+            '--no-owner', '--no-group', '--no-times', '--no-perms',
+            '--size-only',  # check on file size to decide (re)transfer/copy or not.
+            start_directory.joinpath(rel_parent).as_posix() + "/",  # ensure the start dir ends with /
+            dest_parent.as_posix().rstrip("/"),  # ensure the dest dir does NOT end with /
+            #                                    # see rsync man.
+        ]
+        # print(rsync_args)
+        subprocess.check_call(rsync_args)
+
+    print("Finished")
 
 
 if __name__ == '__main__':
