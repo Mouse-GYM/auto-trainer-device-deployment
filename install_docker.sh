@@ -25,6 +25,9 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 # it's supposed to be available in base nvidia ubuntu install :
 sudo apt-get install -y nvidia-container-toolkit
 
+sudo adduser "${USER}" docker  # add user to docker group
+
 sudo systemctl restart docker
 
 echo "You can now use docker with gpu, using '--runtime nvidia --gpus all' args to docker run command, for instance"
+echo "But you need to logout/login for docker group membership to take effect."
