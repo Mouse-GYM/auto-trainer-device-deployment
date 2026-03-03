@@ -1,7 +1,7 @@
 # Services that will be run regardless of environment and will not be built locally as part of development.
 services:
   api:
-    image: ghcr.io/mouse-gym/auto-trainer-device-be:1.0.1
+    image: ghcr.io/mouse-gym/auto-trainer-device-service:1.0.2
     hostname: auto-trainer-device-be
     environment:
       Autotrainer__DeviceId: "${AUTOTRAINER_DEVICE_ID}"
