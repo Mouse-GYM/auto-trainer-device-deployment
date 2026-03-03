@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 
-set -e
+set -e  # exit on any unhandled command error
+
+_expected_user="autotrainer"
+
+if test "${USER}" != "${_expected_user}" -a "${FORCE_USER}" != "1"
+then
+    echo "Expecting to run with ${_expected_user} user, but got ${USER}" >&2
+    echo "You can force any user with setting env. var. FORCE_USER=1" >&2
+    exit 1
+fi
 
 # goto this-script directory:
 cd "$(dirname "${0}")"
-
 
 ## first preparation part,
 # install any desired extra package,
