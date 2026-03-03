@@ -3,13 +3,12 @@
 import argparse
 import datetime
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import List
 
 import cv2
-import glob
-import shutil
 import sys
 
 
@@ -76,7 +75,7 @@ def create_movie_from_images(image_folder, output_video_path, frame_rate):
     # Release the video writer
     video_writer.release()
     
-    # Write all timestams to .txt file
+    # Write all timestamps to .txt file
     
     fileID = os.path.basename(image_folder) + '_timestamps.txt'
     file_path = os.path.join(image_folder, fileID)
@@ -147,6 +146,14 @@ def validate_and_cleanup(image_folder, video_path, frm_ct):
     return True
 
 
+def find_data_dirs(start_dir: Path) -> List[Path]:
+    dirs = []
+    for path in start_dir.glob("[0-9]" * 8):  # * 8 for YYYYMMDD
+        if path.is_dir():
+            dirs.append(path)
+    return dirs
+
+
 def find_web_image_directories(start_dir: Path, *, before_date: datetime.date) -> List[Path]:
     """
     Find all subdirectories under the given starting directory
@@ -189,13 +196,18 @@ def main():
                         type=Path,
                         default=Path('/mnt/isilon/Data/JetsonAutoTrainer/RawDataLocal'))
     parser.add_argument("--stop-days-before-now", type=int, default=2,
-                        help="Do not process data more recent that n days before current date")
+                        help="Do not process data more recent than n days before current date")
+    parser.add_argument("--delete-older-days", type=int, default=14,
+                        help="Delete any trial data (YYYYMMDD) older than this number of days")
 
     args = parser.parse_args()
 
     start_directory = args.raw_data_local_dir
 
-    max_up_to = datetime.date.today() - datetime.timedelta(days=args.stop_days_before_now)
+    today = datetime.date.today()
+    max_up_to = today - datetime.timedelta(days=args.stop_days_before_now)
+
+    data_dirs = find_data_dirs(start_directory)
 
     web_image_dirs = find_web_image_directories(start_directory, before_date=max_up_to)
 
@@ -240,6 +252,21 @@ def main():
         ]
         # print(rsync_args)
         subprocess.check_call(rsync_args)
+
+    # delete older than :
+    delete_older_days = args.delete_older_days
+    def on_delete_error(func, p, exc_info):
+        print(f"Error deleting {p}: {exc_info}")
+
+    if delete_older_days == 0:
+        print("Not removing old files when threshold is 0")
+    else:
+        min_date_keep = today - datetime.timedelta(days=delete_older_days)
+        for path in data_dirs:
+            dir_date = datetime.datetime.strptime(path.name, "%Y%m%d").date()
+            if dir_date < min_date_keep:
+                print(f"Removing {path}")
+                shutil.rmtree(path, onerror=on_delete_error)
 
     print("Finished")
 
