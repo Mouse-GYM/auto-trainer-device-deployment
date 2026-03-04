@@ -72,4 +72,9 @@ sudo service avahi-daemon restart
 sudo mkdir -p /autotrainer/logs
 sudo chmod ugo+w /autotrainer/logs
 
+for group in systemd-journal flirimaging adm
+do
+    sudo adduser autotrainer "${group}"
+done
+
 echo "Preparation complete."
