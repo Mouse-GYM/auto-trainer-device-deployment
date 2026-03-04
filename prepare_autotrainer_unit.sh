@@ -4,6 +4,7 @@ set -e  # exit on any unhandled command error
 
 _expected_user="autotrainer"
 
+
 if test "${USER}" != "${_expected_user}" -a "${FORCE_USER}" != "1"
 then
     echo "Expecting to run with ${_expected_user} user, but got ${USER}" >&2
@@ -72,9 +73,11 @@ sudo service avahi-daemon restart
 sudo mkdir -p /autotrainer/logs
 sudo chmod ugo+w /autotrainer/logs
 
+./install_spinnaker.sh
+
 for group in systemd-journal flirimaging adm
 do
-    sudo adduser autotrainer "${group}"
+    sudo adduser "${USER}" "${group}"
 done
 
 echo "Preparation complete."
