@@ -195,7 +195,7 @@ def main():
     parser.add_argument("--target-dir", help="Target dir, RawDataLocal as well",
                         type=Path,
                         default=Path('/mnt/isilon/Data/JetsonAutoTrainer/RawDataLocal'))
-    parser.add_argument("--stop-days-before-now", type=int, default=2,
+    parser.add_argument("--stop-days-before-now", type=int, default=0,
                         help="Do not process data more recent than n days before current date")
     parser.add_argument("--delete-older-days", type=int, default=14,
                         help="Delete any trial data (YYYYMMDD) older than this number of days")
