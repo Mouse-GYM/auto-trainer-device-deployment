@@ -197,10 +197,12 @@ def main():
                         default=Path('/mnt/isilon/Data/JetsonAutoTrainer/RawDataLocal'))
     parser.add_argument("--stop-days-before-now", type=int, default=0,
                         help="Do not process data more recent than n days before current date")
-    parser.add_argument("--delete-older-days", type=int, default=14,
-                        help="Delete any trial data (YYYYMMDD) older than this number of days")
+    parser.add_argument("--delete-older-days", type=int, default=0,
+                        help="Delete any trial data (YYYYMMDD) older than this number of days. 0 to disable.")
 
     args = parser.parse_args()
+
+    print(f"args={args}")
 
     start_directory = args.raw_data_local_dir
 
@@ -234,7 +236,11 @@ def main():
         rel_parent = validated_dir.relative_to(start_directory).parent
         final_dirs.add(rel_parent)
 
-    final_dirs = sorted(final_dirs)
+    final_dirs = sorted(final_dirs,
+                        # process/sync from most recent to oldest:
+                        reverse=True)
+
+    print(f"Processing final dirs: {final_dirs}")
 
     for rel_parent in final_dirs:
         print(f"syncing {rel_parent}")

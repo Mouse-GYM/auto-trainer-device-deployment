@@ -31,11 +31,8 @@ sudo hostnamectl set-hostname "${device_name}"
 
 #
 
-echo "Copying target files ..."
-(
-  cd ./system-install
-  sudo rsync -av --chown root:root ./ /
-)
+echo "Copying target system files ..."
+./copy_system_files.sh
 
 #
 
@@ -61,6 +58,10 @@ sudo ./install_mnt_isilon.sh
 
 sudo ./install_maintenance_venv.sh
 
+echo "Adding/enabling autotrainer systemd units"
+sudo systemctl enable autotrainer_maintenance.timer
+sudo systemctl start autotrainer_maintenance.timer
+
 # Enable can_setup service on boot/startup.
 sudo systemctl enable can_setup.service
 # and start it for this boot cycle.
@@ -73,8 +74,12 @@ sudo service avahi-daemon restart
 sudo mkdir -p /autotrainer/logs
 sudo chmod ugo+w /autotrainer/logs
 
+echo "Installing spinnaker library"
 ./install_spinnaker.sh
 
+# finally:
+
+echo "Adding user to required or useful groups"
 for group in systemd-journal flirimaging adm
 do
     sudo adduser "${USER}" "${group}"
