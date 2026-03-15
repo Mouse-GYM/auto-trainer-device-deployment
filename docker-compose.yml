@@ -4,12 +4,14 @@ services:
     image: ghcr.io/mouse-gym/auto-trainer-device-service:1.0.2
     hostname: auto-trainer-device-be
     environment:
+      Autotrainer__DeviceId: "${AUTOTRAINER_DEVICE_ID}"
       Autotrainer__MessageQueue__SnS__DeviceId: "${AUTOTRAINER_DEVICE_ID}"
       Autotrainer__MessageQueue__Sns__TopicArn: "${AUTOTRAINER_SNS_TOPIC_ARN}"
       Autotrainer__MessageQueue__Sns__AccessKeyId: "${AUTOTRAINER_SNS_KEY_ID}"
       Autotrainer__MessageQueue__Sns__AccessKey: "${AUTOTRAINER_SNS_KEY}"
     volumes:
       - "${AUTOTRAINER_LOG_VOLUME}:/var/log/auto-trainer"
+      - "/home/autotrainer:/home/autotrainer"
     network_mode: host
     restart: always
   client:
