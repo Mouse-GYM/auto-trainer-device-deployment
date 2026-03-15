@@ -14,6 +14,3 @@ python3.8 -m venv "${venv_dir}"
 python -m pip install "opencv-python>=4,<5"
 
 echo "${venv_dir} now populated and usable"
-
-sudo systemctl enable autotrainer_maintenance.timer
-sudo systemctl start autotrainer_maintenance.timer

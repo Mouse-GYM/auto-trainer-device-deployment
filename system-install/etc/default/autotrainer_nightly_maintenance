@@ -1,0 +1,18 @@
+
+# define where to backup
+
+target_network_mount_point_directory="/mnt/isilon"
+target_sub_directory="Data/JetsonAutoTrainer/RawDataLocal"
+
+# the full target dir will then so be:
+
+target_directory="$target_network_mount_point_directory/$target_sub_directory"
+
+#
+
+venv_dir="/usr/local/autotrainer/venv_maintenance"
+
+
+# nbr of days before to keep (not remove):
+
+delete_older_days="14"
