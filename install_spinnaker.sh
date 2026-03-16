@@ -19,4 +19,7 @@ cd "${extract_dir}"
 
 ./remove_spinnaker_arm.sh
 
+echo "Pre-installing qt5-default required by spinnaker configure but not depended on .."
+sudo apt-get install -y qt5-default
+
 ./install_spinnaker_arm.sh
