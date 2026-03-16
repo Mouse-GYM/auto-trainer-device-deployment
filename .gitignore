@@ -1,3 +1,7 @@
 .DS_Store
 .idea
 .env
+
+# ensure any extracted subdirectory are ignored:
+# NB: keep the trailing / to ensure only directory.
+/spinnaker/spinnaker-*-*/
