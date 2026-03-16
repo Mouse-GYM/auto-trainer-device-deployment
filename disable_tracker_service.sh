@@ -15,9 +15,14 @@ tracker_desktop_files=(
   /etc/xdg/autostart/tracker-store.desktop
 )
 # first pass: remove all previous Hidden= and empty lines:
-sudo sed -i -e '/^Hidden=.*/d' -e '/^$/d' -e '$aHidden=true' "${tracker_desktop_files[@]}"
-# second pass: append Hidden=true
-sudo sed -i -e '$aHidden=true' "${tracker_desktop_files[@]}"
+for idx in ${!tracker_desktop_files[@]} ; do
+  cur_file=${tracker_desktop_files[${idx}]}
+  if test -f "${cur_file}" ; then
+    sudo sed -i -e '/^Hidden=.*/d' -e '/^$/d' -e '$aHidden=true' "${cur_file}"
+    # second pass: append Hidden=true
+    sudo sed -i -e '$aHidden=true' "${cur_file}"
+  fi
+done
 
 # Interval in days to check whether the filesystem is up to date in the database. 0 forces crawling anytime, -1 forces it only after unclean shutdowns, and -2 disables it entirely
 gsettings set org.freedesktop.Tracker.Miner.Files crawling-interval -2  # Default: -1
