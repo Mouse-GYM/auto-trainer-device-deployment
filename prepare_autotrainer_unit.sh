@@ -44,6 +44,7 @@ desired_packages=(
   can-utils
   git git-lfs
   python3.8-venv
+  zenity  # display GUI msg box from CLI
 )
 sudo apt-get install -y "${desired_packages[@]}"
 
