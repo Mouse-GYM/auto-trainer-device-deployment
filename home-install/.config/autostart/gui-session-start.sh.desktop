@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/autotrainer/.local/bin/gui-session-start.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=AutoTrainer auto-start
+Name=AutoTrainer auto-start
+Comment[en_US]=
+Comment=
