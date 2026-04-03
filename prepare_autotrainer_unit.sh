@@ -32,7 +32,7 @@ sudo hostnamectl set-hostname "${device_name}"
 #
 
 echo "Copying target home and system files ..."
-./copy_home_files.sh
+echo Skipping ./copy_home_files.sh for now.
 ./copy_system_files.sh
 
 #
