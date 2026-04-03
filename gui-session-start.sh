@@ -24,7 +24,15 @@ args=()
 if test -f "${status_file}"
 then
     . "${status_file}"
-    args+=( --start-mode "${status}" )
+    rm -f "${status_file}" || true
+    case "${status}" in
+      acquiring|animal_in_device|animal_in_training)
+        args+=( --start-mode "${status}" )
+        ;;
+      *)
+        echo "Not using start-mode=${status}" >&2
+        ;;
+    esac
 fi
 
 # bash -l -i -c "echo ; env ; echo \$PATH ; echo ; auto-trainer-local -d" &>/dev/null
