@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Exec=/home/autotrainer/gui-session-start.sh
+Exec=/home/autotrainer/.local/bin/gui-session-start.sh
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
