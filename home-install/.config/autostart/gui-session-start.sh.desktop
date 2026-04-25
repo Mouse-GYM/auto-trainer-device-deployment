@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Exec=/home/autotrainer/.local/bin/gui-session-start.sh
+Exec=gnome-terminal -- /bin/bash -c "echo \"Starting auto-trainer GUI in 30s, you can interrupt with CTRL-C or exit\" ; sleep 30 && /home/autotrainer/.local/bin/gui-session-start.sh ; exec bash"
+# the trailing ; exec bash allow to keep terminal open when app exits.
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
