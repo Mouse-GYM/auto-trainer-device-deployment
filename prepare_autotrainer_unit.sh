@@ -39,6 +39,7 @@ echo Skipping ./copy_home_files.sh for now.
 
 desired_packages=(
   avahi-daemon
+  crudini
   libhdf5-serial-dev
   libxcb-cursor0
   busybox
@@ -70,7 +71,11 @@ sudo systemctl enable can_setup.service
 # and start it for this boot cycle.
 sudo systemctl start can_setup.service
 
-# Reload mDNS with new service.
+# Configure avahi: disable IPv6 and ignore Docker bridge interfaces.
+sudo crudini --set /etc/avahi/avahi-daemon.conf server use-ipv6 no
+sudo crudini --set /etc/avahi/avahi-daemon.conf server deny-interfaces "docker0,br-*"
+
+# Reload mDNS with new service and config.
 sudo service avahi-daemon restart
 
 # Output for docker container logs
