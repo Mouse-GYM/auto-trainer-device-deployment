@@ -35,9 +35,8 @@ then
     esac
 fi
 
-# bash -l -i -c "echo ; env ; echo \$PATH ; echo ; auto-trainer-local -d" &>/dev/null
 # set -x
-bash -l -i -c 'set -x ; auto-trainer-local "${@}" &>/dev/null' -- "${args[@]}"
+bash -l -i -c 'set -x ; auto-trainer-local "${@}"' -- "${args[@]}"
 
 # -l -i required to get .bashrc pre-executed by bash.
 # NB: assuming conda auto-trainer-1 env is auto-activated via .bashrc
