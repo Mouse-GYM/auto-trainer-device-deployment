@@ -5,9 +5,16 @@ In addition, the following supporting services are required for the node to part
 The majority of device setup is performed by the `prepare_autotrainer_unit.sh` script. This is followed by a manual, device-specific
 configuration step.
 
-### Typical Installation
+## Prerequisites
 
-#### 1. Automated Preparation
+### 1.User
+Although the acquisition application and many services can be made to run under any user, many services 
+default to the assumption, and some do require, that the user be `autotrainer`.  These instructions
+assume they being performed under this user.
+
+## Required
+
+### 1. Automated Preparation
 Run `prepare_autotrainer_unit.sh` with the name of the unit as an argument.
 The name will be used as the hostname for the computer as well as the identifier in remote views,
 emergency notifications, and similar.
@@ -21,7 +28,18 @@ where `<DEVICE_HOST_NAME>` must be replaced with the device-specific name. Such 
 The script requires the use of `sudo`.
 You will be prompted to enter the account password if you have already authenticated for an earlier `sudo` command.
 
-#### 2. Configure Docker Compose Variables
+### 2. Manual Changes
+
+#### Power Mode
+When logged in, use the NVidia Power Mode item in the upper right of the Desktop to ensure that Power Mode is
+set to 50W (typically defaults to 30W after a fresh installation).
+
+## Optional
+These steps enable additional supporting services for the Acquisition application.  They are not required
+for acquisition, but generally enable remote monitoring and control and additional data storage and 
+processing options.
+
+#### 1. Configure Docker Compose Variables
 
 Copy the environment template:
 
@@ -33,9 +51,9 @@ Edit the newly created .env and populate the required values.
 Typical values are provided in the comments of the template file.
 The device name should be the same value you used as an argument to `prepare_autotrainer_unit.sh`.
 
-Values for the AWS SNS notifications are found elsewhere.
+Values for the AWS SNS notifications are optional and will be based on your deployment.
 
-#### 3. Authenticate for Docker Images
+#### 2. Authenticate for Docker Images
 Installing the per-device management console services requires access to the Mouse-GYM GitHub organization.
 
 Log into the GitHub docker registry
@@ -49,14 +67,14 @@ You will be prompted for a personal access token associated with `<username>`.
 Note: For Colorado devices at the time of this writing, a username and access token is sometimes found in a file
 `startup_steps.txt` or similar on the Desktop.
 
-#### 4. Start Docker Containers
+#### 3. Start Docker Containers
 ```shell
 ./up.sh
 ```
 
 After the first manual start, the services will restart after any reboot or other reason for exit automatically.
 
-### Details of Automated Preparation
+## Details of Automated Preparation
 The following provides details of some of the actions performed in the `prepare_autotrainer_unit.sh` script.
 These should not need to be done manually, but may be useful if some portion of the configuration needs to be updated,
 or the script requires troubleshooting.
@@ -128,6 +146,6 @@ hostname `agx201`:
 Create a log file location for the services:
 
 ```shell
-sudo mkdir -p /autotrainer/logs
-chmod uog+w /autotrainer/logs
+sudo mkdir -p /var/autotrainer/logs
+chmod ug+w /var/autotrainer/logs
 ```
