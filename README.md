@@ -7,7 +7,14 @@ configuration step.
 
 ## Prerequisites
 
-### 1.User
+#### 1.SSD & Jetson Linux/Jetpack
+The installation requires an SSD.  The default drive can accept the installation, but the applications will
+perform as required for default capture rates.
+
+The software currently requires JetPack 5.1.x.  There are a number of tutorials for physical SSD installation
+as well as using the NVidia SDK Manager to install Jetson Linux and Jetpack 5, including [this one](https://www.youtube.com/watch?v=DKI1k_aP0Qk).
+
+#### 2. User
 Although the acquisition application and many services can be made to run under any user, many services 
 default to the assumption, and some do require, that the user be `autotrainer`.  These instructions
 assume they being performed under this user.
