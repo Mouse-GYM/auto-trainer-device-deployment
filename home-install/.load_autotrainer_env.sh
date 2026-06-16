@@ -6,8 +6,37 @@ echo " done."
 
 echo -n "Auto-exporting LD_PRELOAD with required auto-trainer libs .."
 
-_extend_ldpreload="/usr/lib/aarch64-linux-gnu/libffi.so.7:/usr/lib/aarch64-linux-gnu/libgomp.so.1:/lib/aarch64-linux-gnu/libGLdispatch.so.0:/home/$USER/anaconda3/envs/auto-trainer-1/lib/python3.8/site-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0"
-export LD_PRELOAD="$LD_PRELOAD:${_extend_ldpreload}"
+__extend_ldpreload_arr=(
+  /usr/lib/aarch64-linux-gnu/libffi.so.7
+  /lib/aarch64-linux-gnu/libGLdispatch.so.0
+)
+
+# allows to handle different site-packages dir,
+# for instance with:
+# /home/autotrainer/anaconda3/envs/auto-trainer-1/lib/python3.8/site-packages
+# vs
+# /home/autotrainer/miniconda3/envs/auto-trainer-1/lib/python3.8/site-packages
+
+__site_packages_dir=$(python -c "import site; print(site.getsitepackages()[0])")
+__scikit_gomp=$(find "${__site_packages_dir}/scikit_learn.libs/" -regextype posix-extended -iregex ".*/libgomp.*so.*$")
+if test -f "${__scikit_gomp}"
+then
+  __extend_ldpreload_arr+=( "${__scikit_gomp}" )
+else
+  echo "Did not find scikit_learn gomp shared lib, is environment fully setup ?" >&2
+fi
+unset __scikit_gomp __site_packages_dir
+
+
+function __join_by {
+  local d=${1-} f=${2-}
+  if shift 2; then
+    printf %s "$f" "${@/#/$d}"
+  fi
+}
+
+export LD_PRELOAD="$LD_PRELOAD:$(__join_by ":" "${__extend_ldpreload_arr[@]}")"
+unset __extend_ldpreload_arr
 
 echo " done."
 
