@@ -34,4 +34,37 @@ show_autotrainer_top() {
   fi
 }
 
-echo "Feel free to use 'show_autotrainer_top' to display auto-trainer live processes"
+
+autotrainer_dump_stack_trace() {
+  which "py-spy" >/dev/null || {
+    echo "py-spy missing/not available. You can install it with pip install py-spy" >&2
+    return 1
+  }
+  local pid
+  echo "Trying to detect auto-trainer main process pid.."
+  # somehow not clean:
+  pid=$(ps -U "autotrainer" -ao pid,cmd | egrep "auto-trainer-1|python .*auto-trainer-local.py" | egrep -v "grep|spawn|resource_tracker|ipython" | awk '{print $1}')
+  if ! test "${pid}" ; then
+    echo "Could not find autotrainer main process pid, is it running ?" >&2
+    return 1
+  fi
+  echo "Found pid=${pid}: $(ps -p ${pid})"
+  local out_file=~/dump_autotrainer_stack_"$(date +%Y%m%d_%H%M%S)".dat
+  local res
+  # display with colors:
+  sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll
+  sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll &> "${out_file}"
+  echo
+  echo "Above stack traces also added to ${out_file}, that you can now copy."
+}
+
+
+cat << END
+
+Feel free to use 'show_autotrainer_top' to display auto-trainer live processes
+
+other available shell tools:
+
++ autotrainer_dump_stack_trace: allows to dump stack trace of main process
+
+END
