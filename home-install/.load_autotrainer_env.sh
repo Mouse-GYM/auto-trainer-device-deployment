@@ -81,8 +81,9 @@ autotrainer_dump_stack_trace() {
   local out_file=~/dump_autotrainer_stack_"$(date +%Y%m%d_%H%M%S)".dat
   local res
   # display with colors:
-  sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll
-  sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll &> "${out_file}"
+  cmd='sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll -n --full-filenames'
+  eval ${cmd}
+  eval ${cmd} &> "${out_file}"
   echo
   echo "Above stack traces also added to ${out_file}, that you can now copy."
 }
