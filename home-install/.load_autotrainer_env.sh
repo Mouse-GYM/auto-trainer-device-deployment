@@ -17,9 +17,10 @@ __extend_ldpreload_arr=(
   "${CONDA_PREFIX}/lib/libgomp.so"
     # to fix/prevent cannot allocate memory in static TLS block
 
-  /usr/lib/aarch64-linux-gnu/libfreetype.so.6
+  # /usr/lib/aarch64-linux-gnu/libfreetype.so.6
     # otherwise the disable state of UI widgets is not dark greyed
-    # todo: remove once that disabled state not visually correct fixed with the conda env libfreetype
+    # todoDONE: remove once that disabled state not visually correct fixed with the conda env libfreetype
+    # fixed with either install of ffmpeg 6.1.1 or force-reinstall of freetype conda package.
 
   /lib/aarch64-linux-gnu/libGLdispatch.so.0
     # for GL use for GUI
