@@ -20,16 +20,10 @@ function __join_by {
 echo -n "Auto-exporting LD_LIBRARY_PATH and LD_PRELOAD with required auto-trainer libs .."
 
 __extend_ldpreload_arr=(
+
   "${CONDA_PREFIX}/lib/libgomp.so"
     # to fix/prevent cannot allocate memory in static TLS block
 
-  # /usr/lib/aarch64-linux-gnu/libfreetype.so.6
-    # otherwise the disable state of UI widgets is not dark greyed
-    # todoDONE: remove once that disabled state not visually correct fixed with the conda env libfreetype
-    # fixed with either install of ffmpeg 6.1.1 or force-reinstall of freetype conda package.
-
-  /lib/aarch64-linux-gnu/libGLdispatch.so.0
-    # for GL use for GUI
 )
 export LD_PRELOAD="$LD_PRELOAD:$(__join_by ":" "${__extend_ldpreload_arr[@]}")"
 unset __extend_ldpreload_arr
