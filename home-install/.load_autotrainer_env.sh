@@ -1,7 +1,13 @@
 # NB: designed to be sourced from .bashrc, for instance.
 
 echo -n "Auto-activating auto-trainer-1 conda environment .."
-conda activate auto-trainer-1
+
+if ! conda activate auto-trainer-1
+then
+  echo "Could not activate auto-trainer-1 ; has it been created ?" >&2
+  echo "Skipping other parts of auto-trainer load environment." >&2
+else
+
 echo " done."
 
 function __join_by {
@@ -83,7 +89,6 @@ autotrainer_dump_stack_trace() {
   pid=${pids[0]}
   echo "Found pid=${pid}: $(ps -p ${pid})"
   local out_file=~/dump_autotrainer_stack_"$(date +%Y%m%d_%H%M%S)".dat
-  local res
   # display with colors and copy to file:
   sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll -n --full-filenames 2>&1 | tee "${out_file}"
   echo
@@ -100,3 +105,5 @@ other available shell tools:
 + autotrainer_dump_stack_trace: allows to dump stack trace of main process
 
 END
+
+fi
