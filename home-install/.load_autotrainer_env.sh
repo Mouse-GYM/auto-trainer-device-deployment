@@ -63,25 +63,29 @@ show_autotrainer_top() {
 
 
 autotrainer_dump_stack_trace() {
-  which "py-spy" >/dev/null || {
+  command -v "py-spy" >/dev/null || {
     echo "py-spy missing/not available. You can install it with pip install py-spy" >&2
     return 1
   }
-  local pid
   echo "Trying to detect auto-trainer main process pid.."
-  # somehow not clean:
-  pid=$(ps -U "autotrainer" -ao pid,cmd | egrep "auto-trainer-1|python .*auto-trainer-local.py" | egrep -v "grep|spawn|resource_tracker|ipython" | awk '{print $1}')
-  if ! test "${pid}" ; then
+  local -a pids
+  mapfile -t pids < <(
+    ps -U "${USER}" -ao pid,cmd \
+    | grep -E "auto-trainer-1|python .*auto-trainer-local.py" \
+    | grep -Ev "grep|spawn|resource_tracker|ipython" \
+    | awk '{print $1}')
+  if (( ${#pids[@]} == 0 )); then
     echo "Could not find autotrainer main process pid, is it running ?" >&2
     return 1
   fi
+  (( ${#pids[@]} > 1 )) && echo "Warning: multiple candidate PIDs (${pids[*]}), using ${pids[0]}" >&2
+  local pid
+  pid=${pids[0]}
   echo "Found pid=${pid}: $(ps -p ${pid})"
   local out_file=~/dump_autotrainer_stack_"$(date +%Y%m%d_%H%M%S)".dat
   local res
-  # display with colors:
-  cmd='sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll -n --full-filenames'
-  eval ${cmd}
-  eval ${cmd} &> "${out_file}"
+  # display with colors and copy to file:
+  sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll -n --full-filenames 2>&1 | tee "${out_file}"
   echo
   echo "Above stack traces also added to ${out_file}, that you can now copy."
 }
