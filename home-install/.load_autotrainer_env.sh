@@ -1,7 +1,13 @@
 # NB: designed to be sourced from .bashrc, for instance.
 
 echo -n "Auto-activating auto-trainer-1 conda environment .."
-conda activate auto-trainer-1
+
+if ! conda activate auto-trainer-1
+then
+  echo "Could not activate auto-trainer-1 ; has it been created ?" >&2
+  echo "Skipping other parts of auto-trainer load environment." >&2
+else
+
 echo " done."
 
 echo -n "Auto-exporting LD_PRELOAD with required auto-trainer libs .."
@@ -101,3 +107,5 @@ other available shell tools:
 + autotrainer_dump_stack_trace: allows to dump stack trace of main process
 
 END
+
+fi
