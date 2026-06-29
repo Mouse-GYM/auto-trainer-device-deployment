@@ -85,7 +85,6 @@ autotrainer_dump_stack_trace() {
   pid=${pids[0]}
   echo "Found pid=${pid}: $(ps -p ${pid})"
   local out_file=~/dump_autotrainer_stack_"$(date +%Y%m%d_%H%M%S)".dat
-  local res
   # display with colors and copy to file:
   sudo env PATH="${PATH}" py-spy dump --pid "${pid}" -ll -n --full-filenames 2>&1 | tee "${out_file}"
   echo
