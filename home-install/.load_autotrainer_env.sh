@@ -10,30 +10,6 @@ else
 
 echo " done."
 
-echo -n "Auto-exporting LD_PRELOAD with required auto-trainer libs .."
-
-__extend_ldpreload_arr=(
-  /usr/lib/aarch64-linux-gnu/libffi.so.7
-  /lib/aarch64-linux-gnu/libGLdispatch.so.0
-)
-
-# allows to handle different site-packages dir,
-# for instance with:
-# /home/autotrainer/anaconda3/envs/auto-trainer-1/lib/python3.8/site-packages
-# vs
-# /home/autotrainer/miniconda3/envs/auto-trainer-1/lib/python3.8/site-packages
-
-__site_packages_dir=$(python -c "import site; print(site.getsitepackages()[0])")
-__scikit_gomp=$(find "${__site_packages_dir}/scikit_learn.libs/" -regextype posix-extended -iregex ".*/libgomp.*so.*$")
-if test -f "${__scikit_gomp}"
-then
-  __extend_ldpreload_arr+=( "${__scikit_gomp}" )
-else
-  echo "Did not find scikit_learn gomp shared lib, is environment fully setup ?" >&2
-fi
-unset __scikit_gomp __site_packages_dir
-
-
 function __join_by {
   local d=${1-} f=${2-}
   if shift 2; then
@@ -41,8 +17,26 @@ function __join_by {
   fi
 }
 
-export LD_PRELOAD="$LD_PRELOAD:$(__join_by ":" "${__extend_ldpreload_arr[@]}")"
-unset __extend_ldpreload_arr
+echo -n "Auto-exporting LD_LIBRARY_PATH and LD_PRELOAD with required auto-trainer libs .."
+
+__gomp="${CONDA_PREFIX}/lib/libgomp.so"
+if [ ! -e "${__gomp}" ]; then
+  echo "Expected ${__gomp} not found, is the environment fully set up?" >&2
+else
+  export LD_PRELOAD="${__gomp}${LD_PRELOAD:+:${LD_PRELOAD}}"
+fi
+unset __gomp
+
+# ensure system libraries from conda env are used :
+conda_libs_paths=(
+  "${CONDA_PREFIX}/lib64"
+  "${CONDA_PREFIX}/lib"
+)
+new_ld_path="$(__join_by ":" "${conda_libs_paths[@]}")"
+export LD_LIBRARY_PATH="${new_ld_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+unset conda_libs_paths new_ld_path
+
+unset __join_by
 
 echo " done."
 
@@ -52,10 +46,11 @@ echo
 
 show_autotrainer_top() {
 	local -a pids=(
-	  $(pgrep -f auto-trainer-1) \
-	  $(pgrep -f tools.acquisition) \
-	  $(pgrep -f auto-trainer-headless) \
-	  $(pgrep -f auto-trainer-local) \
+    $(pgrep -f auto-trainer-local)
+    $(pgrep -f tools.acquisition.gui)
+    $(pgrep -f auto-trainer-headless)
+    $(pgrep -f tools.acquisition.headless)
+    $(pgrep -f auto-trainer-1)
   )
 	echo
 	ps -eo pid,lstart,cmd | grep auto-trainer
