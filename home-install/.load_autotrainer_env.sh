@@ -19,21 +19,24 @@ function __join_by {
 
 echo -n "Auto-exporting LD_LIBRARY_PATH and LD_PRELOAD with required auto-trainer libs .."
 
-__extend_ldpreload_arr=(
-
-  "${CONDA_PREFIX}/lib/libgomp.so"
-    # to fix/prevent cannot allocate memory in static TLS block
-
-)
-export LD_PRELOAD="$LD_PRELOAD:$(__join_by ":" "${__extend_ldpreload_arr[@]}")"
-unset __extend_ldpreload_arr
+__gomp="${CONDA_PREFIX}/lib/libgomp.so"
+if [ ! -e "${__gomp}" ]; then
+  echo "Expected ${__gomp} not found, is the environment fully set up?" >&2
+else
+  export LD_PRELOAD="${__gomp}${LD_PRELOAD:+:${LD_PRELOAD}}"
+fi
+unset __gomp
 
 # ensure system libraries from conda env are used :
 conda_libs_paths=(
   "${CONDA_PREFIX}/lib64"
   "${CONDA_PREFIX}/lib"
 )
-export LD_LIBRARY_PATH="$(__join_by ":" "${conda_libs_paths[@]}" "${LD_LIBRARY_PATH}")"
+new_ld_path="$(__join_by ":" "${conda_libs_paths[@]}")"
+export LD_LIBRARY_PATH="${new_ld_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+unset conda_libs_paths new_ld_path
+
+unset __join_by
 
 echo " done."
 
