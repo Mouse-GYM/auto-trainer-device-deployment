@@ -32,8 +32,8 @@ It should be unique for all units in the system.
 ```
 
 where `<DEVICE_HOST_NAME>` must be replaced with the device-specific name. Such as _agx327_.
-The script requires the use of `sudo`.
-You will be prompted to enter the account password if you have already authenticated for an earlier `sudo` command.
+The script, during execution, is sometimes making use of `sudo`.
+You will be prompted to enter the account password if you have not already authenticated for an earlier `sudo` command.
 
 ### 2. Manual Changes
 
