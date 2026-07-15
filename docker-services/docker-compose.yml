@@ -2,6 +2,7 @@
 services:
   api:
     image: ghcr.io/mouse-gym/auto-trainer-device-service:latest
+    pull_policy: always
     hostname: auto-trainer-device-service
     environment:
       Autotrainer__CommandQueue__Connection: "tcp://${AUTOTRAINER_DEVICE_ID}.mousegym.org:5557"
