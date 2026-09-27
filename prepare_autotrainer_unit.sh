@@ -62,8 +62,15 @@ sudo ./install_mnt_isilon.sh
 sudo ./install_maintenance_venv.sh
 
 echo "Adding/enabling autotrainer systemd units"
+sudo systemctl daemon-reload
+
+# Pick up unit files copied or changed by copy_system_files.sh; otherwise a re-run keeps the stale definitions.
 sudo systemctl enable autotrainer_maintenance.timer
 sudo systemctl start autotrainer_maintenance.timer
+
+# Periodically restart avahi-daemon; it occasionally goes stale and drops off mDNS browsers on other devices.
+sudo systemctl enable restart-avahi.timer
+sudo systemctl start restart-avahi.timer
 
 # Enable can_setup service on boot/startup.
 sudo systemctl enable can_setup.service
