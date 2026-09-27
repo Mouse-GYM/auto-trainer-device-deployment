@@ -8,6 +8,12 @@ CERT_DIR="/certs"
 SERVER_CERT="$CERT_DIR/private_ca_cert.crt"
 SERVER_KEY="$CERT_DIR/private_ca_cert.key"
 
+# Written by acme.sh's reloadcmd after a renewal has copied both the cert and the
+# key. The api container watches it rather than the cert files themselves, so it
+# can never reload on a half-written pair. See entrypoint.sh in the
+# auto-trainer-device-service image.
+RELOAD_STAMP="$CERT_DIR/.cert-reload"
+
 # ---------------------------------------------------------------------------
 # Validate environment
 # ---------------------------------------------------------------------------
@@ -58,6 +64,7 @@ echo "Installing certificate to $CERT_DIR..."
   --ecc \
   --fullchain-file "$SERVER_CERT" \
   --key-file "$SERVER_KEY" \
+  --reloadcmd "date -u +%s > $RELOAD_STAMP" \
   --home "$ACME_HOME"
 
 # Signal readiness
