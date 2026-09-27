@@ -55,7 +55,10 @@ inside a plain Alpine container. On startup it:
    healthcheck polls for this file, which is what gates the `api` service.
 6. **Renews automatically** — the script then loops forever, running
    `acme.sh --cron` once a day. `acme.sh` renews the certificate when it is
-   within ~30 days of expiry (i.e. around the 60-day mark).
+   within ~30 days of expiry (i.e. around the 60-day mark). After installing
+   a certificate, `acme.sh` writes a timestamp to `./certs/.cert-reload`. The
+   `api` container polls that file every 5 minutes and reloads its nginx when
+   it changes, so a renewed certificate takes effect without a restart.
 
 Because DNS-01 validation is used, no inbound HTTP/port-80 access is required to
 issue or renew the certificate.

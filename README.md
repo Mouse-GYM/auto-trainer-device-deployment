@@ -35,18 +35,7 @@ where `<DEVICE_HOST_NAME>` must be replaced with the device-specific name. Such 
 The script requires the use of `sudo`.
 You will be prompted to enter the account password if you have already authenticated for an earlier `sudo` command.
 
-### 2. Manual Changes
-
-#### Power Mode
-When logged in, use the NVidia Power Mode item in the upper right of the Desktop to ensure that Power Mode is
-set to 50W (typically defaults to 30W after a fresh installation).
-
-## Optional
-These steps enable additional supporting services for the Acquisition application.  They are not required
-for acquisition, but generally enable remote monitoring and control and additional data storage and 
-processing options.
-
-#### 1. Configure Docker Compose Variables
+### 2. Configure Docker Compose Variables
 
 Copy the environment template:
 
@@ -60,26 +49,18 @@ The device name should be the same value you used as an argument to `prepare_aut
 
 Values for the AWS SNS notifications are optional and will be based on your deployment.
 
-#### 2. Authenticate for Docker Images
-Installing the per-device management console services requires access to the Mouse-GYM GitHub organization.
-
-Log into the GitHub docker registry
-
-```shell
-docker login ghcr.io -u <username>
-```
-
-You will be prompted for a personal access token associated with `<username>`.
-
-Note: For Colorado devices at the time of this writing, a username and access token is sometimes found in a file
-`startup_steps.txt` or similar on the Desktop.
-
-#### 3. Start Docker Containers
+### 3. Start Docker Containers
 ```shell
 ./up.sh
 ```
 
 After the first manual start, the services will restart after any reboot or other reason for exit automatically.
+
+### 4. Manual Changes
+
+#### Power Mode
+When logged in, use the NVidia Power Mode item in the upper right of the Desktop to ensure that Power Mode is
+set to 50W (typically defaults to 30W after a fresh installation).
 
 ## Details of Automated Preparation
 The following provides details of some of the actions performed in the `prepare_autotrainer_unit.sh` script.
