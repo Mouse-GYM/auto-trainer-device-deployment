@@ -5,11 +5,13 @@ services:
     pull_policy: always
     hostname: auto-trainer-device-service
     environment:
-      Autotrainer__CommandQueue__Connection: "tcp://${AUTOTRAINER_DEVICE_ID}.mousegym.org:5557"
-      Autotrainer__MessageQueue__Connection: "tcp://${AUTOTRAINER_DEVICE_ID}.mousegym.org:5556"
+      Autotrainer__CommandQueue__Connection: "tcp://${CERT_DOMAIN}:5557"
+      Autotrainer__MessageQueue__Connection: "tcp://${CERT_DOMAIN}:5556"
       Autotrainer__MessageQueue__Sns__TopicArn: "${AUTOTRAINER_SNS_TOPIC_ARN}"
       Autotrainer__MessageQueue__Sns__AccessKeyId: "${AUTOTRAINER_SNS_KEY_ID}"
       Autotrainer__MessageQueue__Sns__AccessKey: "${AUTOTRAINER_SNS_KEY}"
+      Autotrainer__WebRtc__AdvertisedAddress: "${CERT_DOMAIN}"
+      Autotrainer__WebRtc__DownscaleFactor: 2
     volumes:
       - "${AUTOTRAINER_LOG_VOLUME}:/var/log/autotrainer"
       - "${AUTOTRAINER_DATABASE_VOLUME}:/data/autotrainer"
@@ -26,7 +28,7 @@ services:
 
   cert-manager:
     image: alpine:3.21
-    entrypoint: ["/bin/sh", "/scripts/entrypoint.sh"]
+    entrypoint: [ "/bin/sh", "/scripts/entrypoint.sh" ]
     environment:
       - CERT_DOMAIN=${CERT_DOMAIN}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -36,7 +38,7 @@ services:
       - ./certs:/certs
       - acme-data:/acme
     healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/certs-ready"]
+      test: [ "CMD", "test", "-f", "/tmp/certs-ready" ]
       interval: 5s
       timeout: 3s
       retries: 30
