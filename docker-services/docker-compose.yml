@@ -19,6 +19,7 @@ services:
       - ./certs:/certs:ro
     ports:
       - "5150:443"
+      - "8556-8564:8556-8564/udp"
     networks:
       - autotrainer
     depends_on:
