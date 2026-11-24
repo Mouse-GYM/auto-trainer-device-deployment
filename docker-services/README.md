@@ -73,6 +73,8 @@ issue or renew the certificate.
 | `CERT_DOMAIN`           | Domain name for the dashboard TLS certificate, issued via Let's Encrypt. A Route 53 hosted zone and A record must exist for this domain (e.g. `dashboard.yourdomain.com`). |
 | `AWS_ACCESS_KEY_ID`     | AWS access key used by the cert manager for Route 53 DNS-01 validation. Scope the IAM user to `ChangeResourceRecordSets` on the hosted zone. |
 | `AWS_SECRET_ACCESS_KEY` | Secret for the AWS access key above. |
+| `AUTOTRAINER_AWS_COGNITO_USER_POOL_ID` | Cognito user pool the management dashboard signs in with (e.g. `us-east-2_rPVvjcKHK`). Without it the dashboard can only read; every change it makes is rejected. |
+| `AUTOTRAINER_AWS_COGNITO_CLIENT_ID` | The dashboard's Cognito app client id. Needed together with the user pool id. |
 
 ### Optional
 
@@ -80,10 +82,12 @@ issue or renew the certificate.
 | --------------------------- | ------------- | ----------- |
 | `AUTOTRAINER_COMPOSE_NAME`  | `autotrainer` | Docker Compose project name (prefix). |
 | `AUTOTRAINER_LOG_VOLUME`    | `/var/log/autotrainer` | Host path mounted into the `api` container for log output. |
-| `AUTOTRAINER_SNS_TOPIC_ARN` | _(blank)_     | AWS SNS topic ARN for emergency stop/resume notifications. Leave blank if not using emergency notifications. |
-| `AUTOTRAINER_SNS_KEY_ID`    | _(blank)_     | AWS SNS access key ID for emergency notifications. Leave blank if unused. |
-| `AUTOTRAINER_SNS_KEY`       | _(blank)_     | AWS SNS secret key for emergency notifications. Leave blank if unused. |
+| `AUTOTRAINER_TZ`            | `America/Denver` | IANA time zone of the `api` container. Must match the zone the device's event producer writes its local times in; the service uses it for device-local days, reports and loading event files. Blank uses the default. |
+| `AUTOTRAINER_AWS_REGION`    | `us-east-2`   | AWS region of the SNS topic and the Cognito user pool. |
+| `AUTOTRAINER_AWS_ACCESS_KEY_ID` | _(blank)_ | AWS access key ID for the api; one IAM principal serves every AWS service it calls (SNS today). Leave blank if unused. |
+| `AUTOTRAINER_AWS_ACCESS_KEY` | _(blank)_    | Secret for the AWS access key above. Leave blank if unused. |
+| `AUTOTRAINER_AWS_SNS_TOPIC_ARN` | _(blank)_ | AWS SNS topic ARN for emergency stop/resume notifications. Leave blank if not using emergency notifications. |
 
-> **Note:** The SNS variables work together — to enable emergency
-> stop/resume notifications, set all three (`AUTOTRAINER_SNS_TOPIC_ARN`,
-> `AUTOTRAINER_SNS_KEY_ID`, `AUTOTRAINER_SNS_KEY`). Leave all blank to disable.
+> **Note:** To enable emergency stop/resume notifications, set the topic ARN
+> (`AUTOTRAINER_AWS_SNS_TOPIC_ARN`) and both AWS credential variables
+> (`AUTOTRAINER_AWS_ACCESS_KEY_ID`, `AUTOTRAINER_AWS_ACCESS_KEY`). Leave them blank to disable.
