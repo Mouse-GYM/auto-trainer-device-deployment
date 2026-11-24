@@ -47,7 +47,7 @@ Edit the newly created .env and populate the required values.
 Typical values are provided in the comments of the template file.
 The device name should be the same value you used as an argument to `prepare_autotrainer_unit.sh`.
 
-Values for the AWS SNS notifications are optional and will be based on your deployment.
+The Cognito user pool and app client values are required for the dashboard to make changes to the device; the AWS credential and SNS values are optional and will be based on your deployment.
 
 ### 3. Start Docker Containers
 ```shell
