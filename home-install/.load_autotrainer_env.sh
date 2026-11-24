@@ -6,15 +6,24 @@ if ! conda activate auto-trainer-1
 then
   echo "Could not activate auto-trainer-1 ; has it been created ?" >&2
   echo "Skipping other parts of auto-trainer load environment." >&2
-else
+  exit 0
+fi
 
 echo " done."
 
-function __join_by {
-  local d=${1-} f=${2-}
-  if shift 2; then
-    printf %s "$f" "${@/#/$d}"
-  fi
+__prepend_unique() {  # $1 = var name, $2 = entry
+  local m=${2%/}
+  case "${!1}" in
+    "$m") ;;
+    "$m/") ;;
+    "$m:"*) ;;
+    "$m/:"*) ;;
+    *":$m") ;;
+    *":$m:"*) ;;
+    *":$m/:"*) ;;
+    *)
+      export "$1=$m${!1:+:${!1}}" ;;
+  esac
 }
 
 echo -n "Auto-exporting LD_LIBRARY_PATH and LD_PRELOAD with required auto-trainer libs .."
@@ -22,21 +31,15 @@ echo -n "Auto-exporting LD_LIBRARY_PATH and LD_PRELOAD with required auto-traine
 __gomp="${CONDA_PREFIX}/lib/libgomp.so"
 if [ ! -e "${__gomp}" ]; then
   echo "Expected ${__gomp} not found, is the environment fully set up?" >&2
-else
-  export LD_PRELOAD="${__gomp}${LD_PRELOAD:+:${LD_PRELOAD}}"
 fi
-unset __gomp
 
 # ensure system libraries from conda env are used :
-conda_libs_paths=(
-  "${CONDA_PREFIX}/lib64"
-  "${CONDA_PREFIX}/lib"
-)
-new_ld_path="$(__join_by ":" "${conda_libs_paths[@]}")"
-export LD_LIBRARY_PATH="${new_ld_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-unset conda_libs_paths new_ld_path
 
-unset __join_by
+__prepend_unique LD_PRELOAD "${__gomp}"
+__prepend_unique LD_LIBRARY_PATH "${CONDA_PREFIX}/lib"
+__prepend_unique LD_LIBRARY_PATH "${CONDA_PREFIX}/lib64"   # prepended last so lib64 ends up first, matching current order
+
+unset __prepend_unique __join_by __gomp
 
 echo " done."
 
@@ -102,5 +105,3 @@ other available shell tools:
 + autotrainer_dump_stack_trace: allows to dump stack trace of main process
 
 END
-
-fi
