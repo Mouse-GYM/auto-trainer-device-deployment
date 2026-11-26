@@ -31,12 +31,6 @@ sudo hostnamectl set-hostname "${device_name}"
 
 #
 
-echo "Copying target home and system files ..."
-echo Skipping ./copy_home_files.sh for now.
-./copy_system_files.sh
-
-#
-
 desired_packages=(
   avahi-daemon
   libhdf5-serial-dev
@@ -50,6 +44,12 @@ desired_packages=(
   logrotate  # system (or others) log rotation
 )
 sudo apt-get install -y "${desired_packages[@]}"
+
+#
+
+echo "Copying target home and system files ..."
+echo Skipping ./copy_home_files.sh for now.
+./copy_system_files.sh
 
 #
 
