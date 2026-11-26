@@ -1,9 +1,8 @@
 /var/log/apport.log {
        daily
-       rotate 7
+       rotate 31
        delaycompress
        compress
        notifempty
        missingok
 }
-

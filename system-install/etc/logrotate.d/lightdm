@@ -1,7 +1,7 @@
 /var/log/lightdm/*.log {
     daily
+    rotate 31
     missingok
-    rotate 7
     compress
     notifempty
     maxsize 10M

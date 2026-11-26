@@ -3,7 +3,7 @@
   compress
   missingok
   sharedscripts
-  rotate 7
+  rotate 31
   postrotate
     ! /usr/sbin/invoke-rc.d --quiet speech-dispatcher status > /dev/null || /usr/sbin/invoke-rc.d speech-dispatcher reload >/dev/null
   endscript

@@ -3,6 +3,6 @@
     missingok
     daily
     copytruncate
-    rotate 7
+    rotate 31
     notifempty
 }
