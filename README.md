@@ -137,3 +137,52 @@ Create a log file location for the services:
 sudo mkdir -p /var/autotrainer/logs
 chmod ug+w /var/autotrainer/logs
 ```
+
+#### Nightly Maintenance
+
+`autotrainer_maintenance.timer` starts `autotrainer_maintenance.service` every day at 01:00. The service runs
+`/usr/local/sbin/auto_trainer_nightly_maintenance.sh` as the `autotrainer` user, with the settings in
+`/etc/default/autotrainer_nightly_maintenance` (sync target, maintenance venv, `delete_older_days`).
+
+For each `YYYYMMDD` folder in `~/Documents/RawDataLocal` older than today, a run:
+
+1. converts every `*_web_images` folder into `*_web_video.mp4` plus `*_web_images_timestamps.txt` (one
+   `<frame index>\t<HHMMSS_mmm>` line per frame), deleting only the PNG files that went into the video;
+2. rsyncs the folder to the Isilon share;
+3. deletes the local folder once it is synced and older than `delete_older_days`.
+
+It needs `ffmpeg` from apt (installed by `prepare_autotrainer_unit.sh`) and the venv from
+`install_maintenance_venv.sh`.
+
+The result of the latest run is written to `~/.config/Colorado/nightly_maintenance_status.json` for other
+services to poll. Set `AUTOTRAINER_NIGHTLY_MAINTENANCE_STATUS_FILE`, or pass `--status-file`, to use another path.
+
+```json
+{
+  "schema_version": 1,
+  "result": "failure",
+  "exit_code": 1,
+  "started_at": "2026-11-28T01:00:02-07:00",
+  "finished_at": "2026-11-28T01:07:41-07:00",
+  "errors": [
+    {"kind": "sync-failed", "path": "/home/autotrainer/Documents/RawDataLocal/20261120", "message": "rsync exited with status 23"}
+  ],
+  "warnings": [
+    {"kind": "unreadable-image", "path": "/home/autotrainer/Documents/RawDataLocal/20261126/agx003/20261126_agx003_h14_web_images",
+     "message": "2 PNG files are empty or cannot be decoded; left in place and synced", "count": 2,
+     "files": ["20261126_agx003_h14_web_20261126_141502_118.png", "20261126_agx003_h14_web_20261126_141503_120.png"]}
+  ]
+}
+```
+
+- `result` is `running`, `success` or `failure`, and `exit_code` is `null` while running. A `running` result
+  whose `started_at` is more than a day old means the run died before finishing.
+- Times are ISO 8601 local time. Paths are absolute, and `path` is `null` when no single path applies.
+- Every entry in `errors` made the run fail. Its `kind` is one of `target-unavailable`, `ffmpeg-missing`,
+  `opencv-missing`, `encode-failed`, `validation-failed`, `publish-failed`, `unverified-video`, `folder-failed`,
+  `sync-failed`, `delete-failed`, `unexpected-exception`, `invalid-arguments`, `wrapper-failed` or
+  `status-write-failed`.
+- `warnings` list PNG files left out of a video, which stay in place and are synced; they never fail the run.
+  The kinds are `bad-filename` (no `_HHMMSS_mmm.png` timestamp in the name), `unreadable-image` (empty or
+  undecodable) and `not-in-video` (arrived after the folder's video was made). `count` is the number of files and
+  `files` lists at most the first 20 names.

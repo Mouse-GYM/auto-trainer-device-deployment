@@ -47,6 +47,7 @@ desired_packages=(
   python3.8-venv
   zenity  # display GUI msg box from CLI
   libopenblas0  # for nvidia torch
+  ffmpeg  # encodes web-image videos in nightly maintenance
 )
 sudo apt-get install -y "${desired_packages[@]}"
 
