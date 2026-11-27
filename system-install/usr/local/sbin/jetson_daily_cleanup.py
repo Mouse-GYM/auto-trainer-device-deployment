@@ -30,10 +30,14 @@ def create_movie_from_images(image_folder: Path, output_video_path: Path, frame_
     with tempfile.NamedTemporaryFile(mode="w+t", encoding="utf-8", suffix=".txt") as fp_cmd, \
             tempfile.NamedTemporaryFile(mode="w+t", encoding="utf-8", suffix=".txt") as fp_frames:
         for img in sorted(image_folder.glob("*.png")):
-            fp_frames.write(f"file {img.as_posix()}\n")
             hour_time_millis = img.name[-14:-4]
             hour_time = hour_time_millis[:6]
-            cur_time = datetime.datetime.strptime(hour_time, "%H%M%S").time()
+            try:
+                cur_time = datetime.datetime.strptime(hour_time, "%H%M%S").time()
+            except ValueError:
+                print(f"skipping invalid png name format: {img.name}")
+                continue
+            fp_frames.write(f"file {img.as_posix()}\n")
             escaped_cur_time = str(cur_time).replace(":", "\\:")
             fp_cmd.write(
                 f"{round(cur_t, 3)}-{round(cur_t + frame_delay, 3)} [enter] drawtext reinit 'text={escaped_cur_time}';\n"
